@@ -12,5 +12,7 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
+      - run: python3 scripts/check-version.py
       - run: dotnet test PhoneFormatter.slnx --configuration Release
-      - run: dotnet pack src/PhoneFormatter/PhoneFormatter.fsproj --configuration Release --output artifacts
+      - run: dotnet pack src/PhoneFormatter/PhoneFormatter.fsproj --configuration Release --no-restore --output artifacts
+      - run: python3 scripts/check-version.py --package artifacts/*.nupkg
