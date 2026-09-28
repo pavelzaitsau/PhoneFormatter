@@ -29,11 +29,12 @@ public class FormatterTests
     }
 
     [TestMethod]
-    public void ToStringUsesNationalFormatAndReportsUnsupportedCountry()
+    [DataRow(CountryPhoneCode.Japan, "+81 42 11234567")]
+    [DataRow(CountryPhoneCode.RussiaKazakhstan, "+7 42 11234567")]
+    public void ToStringUsesInternationalFormatWhenNationalFormatIsUnavailable(CountryPhoneCode country, string expected)
     {
-        var number = Formatter.Number(CountryPhoneCode.Japan, "42", "11234567");
+        var number = Formatter.Number(country, "42", "11234567");
 
-        Assert.AreEqual("+814211234567", number.ToE123());
-        Assert.ThrowsExactly<InvalidOperationException>(() => number.ToString());
+        Assert.AreEqual(expected, number.ToString());
     }
 }

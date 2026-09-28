@@ -19,7 +19,7 @@ Console.WriteLine(number.ToSpacedE123());     // +375 222 284444
 Console.WriteLine(number.ToNationalFormat()); // 8-0222-284444
 ```
 
-Add `using PavelZaitsau.PhoneFormatter;` to a C# file that uses the example.
+Add `using PavelZaitsau.PhoneFormatter;` to a C# file that uses the example. `ToString()` returns the national format for Belarus and the spaced international format for other supported countries.
 
 ## What it does not do
 

@@ -22,4 +22,6 @@ type internal FormattedPhoneNumber(countryPhoneCode, code, phoneNumber) =
             | _ -> raise (InvalidOperationException("Unknown country code"))
 
     override this.ToString() =
-        (this :> IFormattedPhoneNumber).ToNationalFormat()
+        match countryPhoneCode with
+        | CountryPhoneCode.Belarus -> (this :> IFormattedPhoneNumber).ToNationalFormat()
+        | _ -> (this :> IFormattedPhoneNumber).ToSpacedE123()
