@@ -1,49 +1,47 @@
 # PhoneFormatter
 
-PhoneFormatter formats phone numbers for .NET applications using country codes for Belarus, Japan, and Russia or Kazakhstan.
+PhoneFormatter parses and formats phone numbers from many regions in .NET applications.
 
 ## Use it
 
-Install the .NET 10 SDK, then run the tests:
-
-```bash
-dotnet test PhoneFormatter.slnx
-```
-
-Reference `src/PhoneFormatter/PhoneFormatter.fsproj` from a .NET project. This C# example produces international and Belarusian national formats:
+Reference `src/PhoneFormatter/PhoneFormatter.fsproj` from a .NET 10 project. This C# example formats a US number:
 
 ```csharp
-var number = Formatter.Number(CountryPhoneCode.Belarus, "222", "284444");
-Console.WriteLine(number.ToE123());           // +375222284444
-Console.WriteLine(number.ToSpacedE123());     // +375 222 284444
-Console.WriteLine(number.ToNationalFormat()); // 8-0222-284444
+using PavelZaitsau.PhoneFormatter;
+
+var number = Formatter.Parse("+1 415 666 7777");
+Console.WriteLine(number.ToE164());               // +14156667777
+Console.WriteLine(number.ToE123());               // +1 415 666 7777
+Console.WriteLine(number.ToInternationalFormat()); // +1 415-666-7777
+Console.WriteLine(number.ToNationalFormat());      // (415) 666-7777
+Console.WriteLine(number.ToRfc3966());             // tel:+1-415-666-7777
 ```
 
-Add `using PavelZaitsau.PhoneFormatter;` to a C# file that uses the example. `ToString()` returns the national format for Belarus and the spaced international format for other supported countries.
+Pass a two-letter region for a national number: `Formatter.Parse("(415) 666-7777", "US")`. Run `dotnet test PhoneFormatter.slnx` to check the project.
 
 ## What it does not do
 
-- The formatter does not parse or normalize a complete phone number.
-- The formatter does not accept punctuation or non-ASCII numerals in either component.
-- National formatting supports Belarus only. Other supported country codes throw `InvalidOperationException` for that format.
+- A valid pattern does not prove a number is assigned, active, or reachable.
+- `ToE164()` omits an extension. Use `ToRfc3966()` when an extension must remain in the output.
+- Output formatting does not tell callers how to dial from their current location.
 
 ## Configuration
 
-| Setting | Default | Effect |
+| Input | Default | Effect |
 | --- | --- | --- |
-| Country code | Required | Selects the international prefix and available national format |
-| Area code | Required, 2–4 ASCII digits | Appears after the country prefix |
-| Phone number | Required, 6–8 ASCII digits | Appears after the area code |
+| `phoneNumber` | Required | Accepts international, national, and `tel:` forms up to 250 characters |
+| `defaultRegion` | Not needed for numbers beginning with `+` | Supplies an ISO two-letter region for national input |
+
+The library uses region rules from `libphonenumber-csharp` 9.0.40. Update that package to receive newer numbering metadata.
 
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `FormatException` | A component has an invalid length or contains a character outside `0`–`9` | Pass a 2–4 digit area code and a 6–8 digit phone number using `0`–`9` |
-| `ArgumentNullException` | An area code or phone number is `null` | Pass both components as strings |
-| `InvalidOperationException` | No national formatter exists for the chosen country | Use `ToE123()` or `ToSpacedE123()` |
-| `InvalidEnumArgumentException` | The country code is not a declared enum value | Use a member of `CountryPhoneCode` |
+| `FormatException` | The input cannot be parsed or does not match a valid regional pattern | Check the number and provide its region for national input |
+| `ArgumentException` | The supplied region is unsupported | Pass a supported ISO two-letter region |
+| `ArgumentNullException` | A required argument is `null` | Pass a number and, for the two-argument overload, a region |
 
 ## More
 
-Read [AGENTS.md](AGENTS.md) before changing the library or its tests.
+Read [AGENTS.md](https://github.com/pavelzaitsau/PhoneFormatter/blob/master/AGENTS.md) before changing the library. See [libphonenumber-csharp](https://github.com/twcclegg/libphonenumber-csharp) for metadata and parsing behavior.

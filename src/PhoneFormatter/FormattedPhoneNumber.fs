@@ -1,27 +1,20 @@
 namespace PavelZaitsau.PhoneFormatter
 
-open System
+open System.Text.RegularExpressions
+open PhoneNumbers
 
-type internal FormattedPhoneNumber(countryPhoneCode, code, phoneNumber) =
+type internal FormattedPhoneNumber(number: PhoneNumber) =
+    let util = PhoneNumberUtil.GetInstance()
+
     interface IFormattedPhoneNumber with
-        member this.PhoneNumber with get() = phoneNumber
-        member this.Code with get() = code
-        member this.CountryPhoneCode with get() = countryPhoneCode
+        member _.ToE164() = util.Format(number, PhoneNumberFormat.E164)
 
-        member this.ToE123() =
-            let cCode = (int countryPhoneCode).ToString("+#")
-            String.concat "" [cCode; code; phoneNumber]
+        member _.ToE123() =
+            let international = util.Format(number, PhoneNumberFormat.INTERNATIONAL)
+            Regex.Replace(international.Replace('-', ' '), @"\s+", " ").Trim()
 
-        member this.ToSpacedE123() =
-            let cCode = (int countryPhoneCode).ToString("+#")
-            String.concat " " [cCode; code; phoneNumber]
+        member _.ToInternationalFormat() = util.Format(number, PhoneNumberFormat.INTERNATIONAL)
+        member _.ToNationalFormat() = util.Format(number, PhoneNumberFormat.NATIONAL)
+        member _.ToRfc3966() = util.Format(number, PhoneNumberFormat.RFC3966)
 
-        member this.ToNationalFormat() =
-            match countryPhoneCode with
-            | CountryPhoneCode.Belarus -> String.Format("8-0{0}-{1}", code, phoneNumber)
-            | _ -> raise (InvalidOperationException("Unknown country code"))
-
-    override this.ToString() =
-        match countryPhoneCode with
-        | CountryPhoneCode.Belarus -> (this :> IFormattedPhoneNumber).ToNationalFormat()
-        | _ -> (this :> IFormattedPhoneNumber).ToSpacedE123()
+    override _.ToString() = util.Format(number, PhoneNumberFormat.INTERNATIONAL)

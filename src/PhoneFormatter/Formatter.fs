@@ -1,37 +1,38 @@
 namespace PavelZaitsau.PhoneFormatter
 
 open System
+open PhoneNumbers
 
-type Formatter() =
-    static member Number (countryPhoneCode: CountryPhoneCode, code: string, phoneNumber: string): IFormattedPhoneNumber =
-        if isNull code then
-            nullArg "code"
+type Formatter private () =
+    static let util = PhoneNumberUtil.GetInstance()
 
+    static member private ParseCore(phoneNumber: string, defaultRegion: string): IFormattedPhoneNumber =
         if isNull phoneNumber then
             nullArg "phoneNumber"
 
-        if phoneNumber.Length < 6 then
-            raise (System.FormatException("Phone number contains less than 6 digits"))
+        if String.IsNullOrWhiteSpace(phoneNumber) || phoneNumber.Length > 250 then
+            raise (FormatException("Invalid phone number"))
 
-        if phoneNumber.Length > 8 then
-            raise (System.FormatException("Phone number contains more than 8 digits"))
+        try
+            let parsed = util.Parse(phoneNumber, defaultRegion)
 
-        if code.Length < 2 then
-            raise (System.FormatException("Code contains less than 2 digits"))
+            if not (util.IsValidNumber(parsed)) then
+                raise (FormatException("Invalid phone number"))
 
-        if code.Length > 4 then
-            raise (System.FormatException("Code contains more than 4 digits"))
+            FormattedPhoneNumber(parsed) :> IFormattedPhoneNumber
+        with :? NumberParseException as error ->
+            raise (FormatException("Invalid phone number", error))
 
-        let asciiDigitsOnly (value: string) =
-            value |> Seq.forall (fun character -> character >= '0' && character <= '9')
+    static member Parse(phoneNumber: string): IFormattedPhoneNumber =
+        Formatter.ParseCore(phoneNumber, null)
 
-        if not (asciiDigitsOnly code) then
-            raise (FormatException("Code must contain only ASCII digits"))
+    static member Parse(phoneNumber: string, defaultRegion: string): IFormattedPhoneNumber =
+        if isNull defaultRegion then
+            nullArg "defaultRegion"
 
-        if not (asciiDigitsOnly phoneNumber) then
-            raise (FormatException("Phone number must contain only ASCII digits"))
+        let region = defaultRegion.ToUpperInvariant()
 
-        if not <| Enum.IsDefined(typeof<CountryPhoneCode>, countryPhoneCode) then
-            raise (System.ComponentModel.InvalidEnumArgumentException("Illegal country phone code value"))
+        if not (util.GetSupportedRegions().Contains(region)) then
+            invalidArg "defaultRegion" "Unsupported region"
 
-        new FormattedPhoneNumber(countryPhoneCode, code, phoneNumber) :> IFormattedPhoneNumber
+        Formatter.ParseCore(phoneNumber, region)

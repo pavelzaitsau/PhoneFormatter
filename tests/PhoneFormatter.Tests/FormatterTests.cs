@@ -1,5 +1,4 @@
-using System;
-using System.ComponentModel;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PavelZaitsau.PhoneFormatter.Tests;
@@ -8,33 +7,58 @@ namespace PavelZaitsau.PhoneFormatter.Tests;
 public class FormatterTests
 {
     [TestMethod]
-    public void BelarusNumberExposesComponentsAndFormats()
+    public void InternationalNumberHasStandardOutputFormats()
     {
-        var number = Formatter.Number(CountryPhoneCode.Belarus, "222", "284444");
+        var number = Formatter.Parse("+1 415 666 7777");
 
-        Assert.AreEqual(CountryPhoneCode.Belarus, number.CountryPhoneCode);
-        Assert.AreEqual("222", number.Code);
-        Assert.AreEqual("284444", number.PhoneNumber);
-        Assert.AreEqual("+375222284444", number.ToE123());
-        Assert.AreEqual("+375 222 284444", number.ToSpacedE123());
-        Assert.AreEqual("8-0222-284444", number.ToNationalFormat());
-        Assert.AreEqual(number.ToNationalFormat(), number.ToString());
+        Assert.AreEqual("+14156667777", number.ToE164());
+        Assert.AreEqual("+1 415 666 7777", number.ToE123());
+        Assert.AreEqual("+1 415-666-7777", number.ToInternationalFormat());
+        Assert.AreEqual("(415) 666-7777", number.ToNationalFormat());
+        Assert.AreEqual("tel:+1-415-666-7777", number.ToRfc3966());
+        Assert.AreEqual(number.ToInternationalFormat(), number.ToString());
     }
 
     [TestMethod]
-    public void UnknownCountryCodeIsRejected()
+    public void NationalInputUsesRegionToFindCountryCallingCode()
     {
-        Assert.ThrowsExactly<InvalidEnumArgumentException>(() =>
-            Formatter.Number((CountryPhoneCode)1000, "222", "284444"));
+        var number = Formatter.Parse("(415) 666-7777", "US");
+
+        Assert.AreEqual("+14156667777", number.ToE164());
     }
 
     [TestMethod]
-    [DataRow(CountryPhoneCode.Japan, "+81 42 11234567")]
-    [DataRow(CountryPhoneCode.RussiaKazakhstan, "+7 42 11234567")]
-    public void ToStringUsesInternationalFormatWhenNationalFormatIsUnavailable(CountryPhoneCode country, string expected)
+    public void ExtensionAppearsInRfc3966ButNotE164()
     {
-        var number = Formatter.Number(country, "42", "11234567");
+        var number = Formatter.Parse("+1 415 666 7777 ext. 123");
 
-        Assert.AreEqual(expected, number.ToString());
+        Assert.AreEqual("+14156667777", number.ToE164());
+        Assert.AreEqual("tel:+1-415-666-7777;ext=123", number.ToRfc3966());
+    }
+
+    [TestMethod]
+    public void ParsesTelephoneUriWithExtension()
+    {
+        var number = Formatter.Parse("tel:+1-415-666-7777;ext=123");
+
+        Assert.AreEqual("+14156667777", number.ToE164());
+        Assert.AreEqual("tel:+1-415-666-7777;ext=123", number.ToRfc3966());
+    }
+
+    [TestMethod]
+    [DataRow("+441174960123")]
+    [DataRow("+4930901820")]
+    [DataRow("+81312345678")]
+    [DataRow("+33123456789")]
+    [DataRow("+375291234567")]
+    [DataRow("+74951234567")]
+    [DataRow("+77172123456")]
+    public void FormatsValidNumbersFromDifferentRegions(string input)
+    {
+        var number = Formatter.Parse(input);
+
+        Assert.AreEqual(input, number.ToE164());
+        Assert.IsTrue(Regex.IsMatch(number.ToE123(), @"^\+[0-9 ]+$"));
+        StringAssert.StartsWith(number.ToRfc3966(), "tel:+");
     }
 }

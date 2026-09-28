@@ -13,3 +13,4 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet test PhoneFormatter.slnx --configuration Release
+      - run: dotnet pack src/PhoneFormatter/PhoneFormatter.fsproj --configuration Release --output artifacts

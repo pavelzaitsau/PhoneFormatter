@@ -4,13 +4,30 @@
     <AssemblyName>PavelZaitsau.PhoneFormatter</AssemblyName>
     <RootNamespace>PavelZaitsau.PhoneFormatter</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
+    <PackageId>PavelZaitsau.PhoneFormatter</PackageId>
+    <Authors>Pavel Zaitsau</Authors>
+    <Description>Parses and formats phone numbers across regions.</Description>
+    <PackageProjectUrl>https://github.com/pavelzaitsau/PhoneFormatter</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pavelzaitsau/PhoneFormatter</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>phone;telephone;formatting;fsharp</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <FSharpCoreImplicitPackageVersion>10.1.401</FSharpCoreImplicitPackageVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CountryPhoneCode.fs" />
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="IFormattedPhoneNumber.fs" />
     <Compile Include="FormattedPhoneNumber.fs" />
     <Compile Include="Formatter.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="libphonenumber-csharp" Version="9.0.40" />
   </ItemGroup>
 </Project>
