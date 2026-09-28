@@ -53,4 +53,12 @@ public class ValidationTests
 
         Assert.AreEqual("defaultRegion", error.ParamName);
     }
+
+    [TestMethod]
+    [DataRow("5550123", "US")]
+    [DataRow("4156667777", "GB")]
+    public void ShortOrWrongRegionNationalNumberIsRejected(string input, string region)
+    {
+        Assert.ThrowsExactly<FormatException>(() => Formatter.Parse(input, region));
+    }
 }
