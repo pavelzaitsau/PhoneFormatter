@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>PavelZaitsau.PhoneFormatter</AssemblyName>
+    <RootNamespace>PavelZaitsau.PhoneFormatter</RootNamespace>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>1.0.0</Version>
+    <FSharpCoreImplicitPackageVersion>10.1.401</FSharpCoreImplicitPackageVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CountryPhoneCode.fs" />
+    <Compile Include="IFormattedPhoneNumber.fs" />
+    <Compile Include="FormattedPhoneNumber.fs" />
+    <Compile Include="Formatter.fs" />
+  </ItemGroup>
+</Project>

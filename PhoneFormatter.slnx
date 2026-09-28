@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PhoneFormatter/PhoneFormatter.fsproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PhoneFormatter.Tests/PhoneFormatter.Tests.csproj" />
+  </Folder>
+</Solution>
