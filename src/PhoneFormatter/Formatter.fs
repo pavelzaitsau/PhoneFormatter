@@ -1,11 +1,9 @@
-﻿namespace PavelZaitsau.PhoneFormatter
+namespace PavelZaitsau.PhoneFormatter
 
 open System
 
 type Formatter() =
     static member Number (countryPhoneCode: CountryPhoneCode, code: string, phoneNumber: string): IFormattedPhoneNumber =
-        let length = String.length
-
         if phoneNumber.Length < 6 then
             raise (System.FormatException("Phone number contains less than 6 digits"))
 
