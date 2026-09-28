@@ -24,7 +24,7 @@ Add `using PavelZaitsau.PhoneFormatter;` to a C# file that uses the example.
 ## What it does not do
 
 - The formatter does not parse or normalize a complete phone number.
-- The formatter checks component lengths but does not check whether each character is a digit.
+- The formatter does not accept punctuation or non-ASCII numerals in either component.
 - National formatting supports Belarus only. Other supported country codes throw `InvalidOperationException` for that format.
 
 ## Configuration
@@ -32,14 +32,15 @@ Add `using PavelZaitsau.PhoneFormatter;` to a C# file that uses the example.
 | Setting | Default | Effect |
 | --- | --- | --- |
 | Country code | Required | Selects the international prefix and available national format |
-| Area code | Required, 2–4 characters | Appears after the country prefix |
-| Phone number | Required, 6–8 characters | Appears after the area code |
+| Area code | Required, 2–4 ASCII digits | Appears after the country prefix |
+| Phone number | Required, 6–8 ASCII digits | Appears after the area code |
 
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `FormatException` | A component is outside its accepted length | Pass a 2–4 character area code and a 6–8 character phone number |
+| `FormatException` | A component has an invalid length or contains a character outside `0`–`9` | Pass a 2–4 digit area code and a 6–8 digit phone number using `0`–`9` |
+| `ArgumentNullException` | An area code or phone number is `null` | Pass both components as strings |
 | `InvalidOperationException` | No national formatter exists for the chosen country | Use `ToE123()` or `ToSpacedE123()` |
 | `InvalidEnumArgumentException` | The country code is not a declared enum value | Use a member of `CountryPhoneCode` |
 

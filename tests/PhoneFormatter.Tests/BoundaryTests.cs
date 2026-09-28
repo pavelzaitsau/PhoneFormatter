@@ -40,9 +40,9 @@ public class BoundaryTests
         Assert.AreEqual(spaced, number.ToSpacedE123());
         Assert.ThrowsExactly<InvalidOperationException>(() => number.ToNationalFormat());
     }
+
     [TestMethod]
     [DataRow("02", "012345", "+37502012345", "8-002-012345")]
-    [DataRow("AB", "12-456", "+375AB12-456", "8-0AB-12-456")]
     public void FormatterPreservesComponentText(string code, string phoneNumber, string international, string national)
     {
         var number = Formatter.Number(CountryPhoneCode.Belarus, code, phoneNumber);
@@ -51,5 +51,28 @@ public class BoundaryTests
         Assert.AreEqual(phoneNumber, number.PhoneNumber);
         Assert.AreEqual(international, number.ToE123());
         Assert.AreEqual(national, number.ToNationalFormat());
+    }
+
+    [TestMethod]
+    [DataRow("AB", "123456")]
+    [DataRow("12", "12-456")]
+    [DataRow("١٢", "123456")]
+    [DataRow("12", "１２３４５６")]
+    public void NonAsciiOrNonDigitComponentsThrowFormatException(string code, string phoneNumber)
+    {
+        Assert.ThrowsExactly<FormatException>(() =>
+            Formatter.Number(CountryPhoneCode.Belarus, code, phoneNumber));
+    }
+
+    [TestMethod]
+    public void NullComponentsIdentifyTheArgument()
+    {
+        var codeError = Assert.ThrowsExactly<ArgumentNullException>(() =>
+            Formatter.Number(CountryPhoneCode.Belarus, null!, "123456"));
+        var numberError = Assert.ThrowsExactly<ArgumentNullException>(() =>
+            Formatter.Number(CountryPhoneCode.Belarus, "12", null!));
+
+        Assert.AreEqual("code", codeError.ParamName);
+        Assert.AreEqual("phoneNumber", numberError.ParamName);
     }
 }

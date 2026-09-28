@@ -12,4 +12,4 @@ This repository contains an F# library and a C# MSTest project. The solution tar
 
 ## Public behavior
 
-`Formatter.Number` checks component lengths and declared country codes. National formatting exists for Belarus only. See [README.md](README.md) for supported output and limitations.
+`Formatter.Number` accepts only ASCII digits and checks component lengths and declared country codes. It rejects null components with `ArgumentNullException`. National formatting exists for Belarus only. See [README.md](README.md) for output examples.
