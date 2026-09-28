@@ -10,6 +10,8 @@ This repository contains an F# phone-number library and a C# MSTest project. The
 - Run `dotnet test PhoneFormatter.slnx --configuration Release` after code changes.
 - Run `dotnet pack src/PhoneFormatter/PhoneFormatter.fsproj --configuration Release` after package changes.
 - Keep generated `bin`, `obj`, `TestResults`, and `artifacts` files out of Git.
+- Use Conventional Commits. Release Please sets the version through a release PR; do not bump it in feature commits.
+- Run `python3 scripts/check-version.py` after changing package or release configuration.
 
 ## Public behavior
 
