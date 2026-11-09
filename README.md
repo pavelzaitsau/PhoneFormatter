@@ -4,11 +4,16 @@ PhoneFormatter parses, validates, and formats phone numbers from many regions in
 
 ## Use it
 
-The package is on GitHub Packages, which requires a GitHub token with the `read:packages` scope even for public packages. Add the source once, then install the package:
+Install the package from nuget.org:
+
+```bash
+dotnet add package PavelZaitsau.PhoneFormatter
+```
+
+Versions up to 2.3.1 are on GitHub Packages only, which requires a GitHub token with the `read:packages` scope even for a public package. Add that source once to install an older version:
 
 ```bash
 dotnet nuget add source https://nuget.pkg.github.com/pavelzaitsau/index.json --name pavelzaitsau --username "$GITHUB_USER" --password "$GITHUB_TOKEN" --store-password-in-clear-text
-dotnet add package PavelZaitsau.PhoneFormatter
 ```
 
 This C# example formats a US number:
@@ -48,7 +53,7 @@ The library uses region rules from `libphonenumber-csharp` 9.0.40. Add a newer `
 | `FormatException` | The input cannot be parsed or does not match a valid regional pattern | Check the number and provide its region for national input |
 | `ArgumentException` | The supplied region is unsupported | Pass a supported ISO two-letter region |
 | `ArgumentNullException` | A required argument is `null` | Pass a number and, for the two-argument overload, a region |
-| `401 Unauthorized` from `nuget.pkg.github.com` | The source has no token, or the token lacks `read:packages` | Add the source again with a token that has `read:packages` |
+| `401 Unauthorized` from `nuget.pkg.github.com` | The GitHub Packages source has no token, or the token lacks `read:packages` | Add the source again with a token that has `read:packages` |
 
 ## More
 
