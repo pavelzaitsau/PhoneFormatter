@@ -4,7 +4,7 @@
     <AssemblyName>PavelZaitsau.PhoneFormatter</AssemblyName>
     <RootNamespace>PavelZaitsau.PhoneFormatter</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>2.3.0</Version>
+    <Version>2.3.1</Version>
     <PackageId>PavelZaitsau.PhoneFormatter</PackageId>
     <Authors>Pavel Zaitsau</Authors>
     <Description>Parses, validates, and formats phone numbers from many regions as E.164, E.123, international, national, and RFC 3966 text. Uses libphonenumber-csharp numbering metadata.</Description>
