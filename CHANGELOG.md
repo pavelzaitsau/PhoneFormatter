@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/pavelzaitsau/PhoneFormatter/compare/v2.3.1...v2.3.2) (2026-11-09)
+
+
+### Bug Fixes
+
+* **release:** publish the package to nuget.org ([#6](https://github.com/pavelzaitsau/PhoneFormatter/issues/6)) ([0b05af7](https://github.com/pavelzaitsau/PhoneFormatter/commit/0b05af75e396eff0da45c3b436d393e424b4f692))
+
 ## [2.3.1](https://github.com/pavelzaitsau/PhoneFormatter/compare/v2.3.0...v2.3.1) (2026-11-09)
 
 
