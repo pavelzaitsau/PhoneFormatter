@@ -7,16 +7,19 @@
     <Version>2.3.0</Version>
     <PackageId>PavelZaitsau.PhoneFormatter</PackageId>
     <Authors>Pavel Zaitsau</Authors>
-    <Description>Parses and formats phone numbers across regions.</Description>
+    <Description>Parses, validates, and formats phone numbers from many regions as E.164, E.123, international, national, and RFC 3966 text. Uses libphonenumber-csharp numbering metadata.</Description>
     <PackageProjectUrl>https://github.com/pavelzaitsau/PhoneFormatter</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pavelzaitsau/PhoneFormatter</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>phone;telephone;formatting;fsharp</PackageTags>
+    <PackageTags>phone;phone-number;telephone;formatting;parsing;validation;e164;e123;rfc3966;libphonenumber;fsharp</PackageTags>
+    <PackageReleaseNotes>https://github.com/pavelzaitsau/PhoneFormatter/blob/master/CHANGELOG.md</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <FSharpCoreImplicitPackageVersion>10.1.401</FSharpCoreImplicitPackageVersion>
+    <FSharpCoreImplicitPackageVersion>8.0.100</FSharpCoreImplicitPackageVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="/"/>
