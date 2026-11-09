@@ -8,7 +8,8 @@ This repository contains an F# phone-number library and a C# MSTest project. The
 - Use `libphonenumber-csharp` for regional parsing, validation, and grouping rules. Avoid hand-written country rules.
 - Add a failing test before changing behavior. Test valid, invalid, and extension input when relevant.
 - Run `dotnet test PhoneFormatter.slnx --configuration Release` after code changes.
-- Run `dotnet pack src/PhoneFormatter/PhoneFormatter.fsproj --configuration Release` after package changes.
+- Run `dotnet pack src/PhoneFormatter/PhoneFormatter.fsproj --configuration Release --output artifacts` after package changes. Then run `python3 scripts/check-package.py` on the new `.nupkg`.
+- Add an XML doc comment to every new public member, and add the member's documentation ID to `DOCUMENTED_MEMBERS` in `scripts/check-package.py`. The script fails when a listed member has no summary.
 - Keep generated `bin`, `obj`, `TestResults`, and `artifacts` files out of Git.
 - Use Conventional Commits. Release Please sets the version through a release PR; do not bump it in feature commits.
 - Run `python3 scripts/check-version.py` after changing package or release configuration.
