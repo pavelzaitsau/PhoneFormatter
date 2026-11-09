@@ -11,15 +11,26 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-  packages: write
+# Runs execute one at a time, so release-please never races itself and a version is never pushed twice at once.
+# GitHub keeps one pending run per group: a third run replaces the pending one.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      # The nuget.org setup check reads the nuget environment.
+      actions: read
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      tag: ${{ steps.publish.outputs.tag }}
+      nuget: ${{ steps.publish.outputs.nuget }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -49,21 +60,115 @@ jobs:
         with:
           target-branch: master
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
-      - if: steps.release.outputs.release_created == 'true' || inputs.tag != ''
+      - name: Select the release to publish
+        id: publish
         env:
-          RELEASE_TAG: ${{ inputs.tag || steps.release.outputs.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
+          CREATED_TAG: ${{ steps.release.outputs.tag_name }}
+          # Versions up to this one predate nuget.org publishing and stay on GitHub Packages only.
+          # nuget.org cannot delete a version, so a manual run with an older tag skips nuget.org.
+          NUGET_ORG_LAST_EXCLUDED_VERSION: 2.3.1
+        run: |
+          tag="$INPUT_TAG"
+          if [ -z "$tag" ] && [ "$RELEASE_CREATED" = "true" ]; then
+            tag="$CREATED_TAG"
+          fi
+          nuget=false
+          if [ -n "$tag" ] && ! printf '%s\n' "${tag#v}" "$NUGET_ORG_LAST_EXCLUDED_VERSION" | sort --version-sort --check=quiet; then
+            nuget=true
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "nuget=$nuget" >> "$GITHUB_OUTPUT"
+          echo "Release tag: ${tag:-none}; publish to nuget.org: $nuget"
+      # Fails before any registry changes. The nuget.org policy itself is checked only when the nuget job logs in,
+      # and that job runs before the GitHub Packages push.
+      - name: Check nuget.org setup
+        if: steps.publish.outputs.nuget == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          if [ -z "$NUGET_USER" ]; then
+            echo "::error::Set the NUGET_USER repository variable to the nuget.org profile name that owns the trusted publishing policy."
+            exit 1
+          fi
+          # GitHub creates a missing environment on first use with no branch rule, which lets any branch publish.
+          if ! custom=$(gh api "repos/$GITHUB_REPOSITORY/environments/nuget" --jq '.deployment_branch_policy.custom_branch_policies // false' 2>/dev/null); then
+            custom=missing
+          fi
+          rules=""
+          if [ "$custom" = "true" ]; then
+            rules=$(gh api "repos/$GITHUB_REPOSITORY/environments/nuget/deployment-branch-policies" --jq '[.branch_policies[] | "\(.type // "branch"):\(.name)"] | join(",")')
+          fi
+          if [ "$rules" != "branch:master" ]; then
+            echo "::error::Create the nuget environment and limit its deployment branches to master only (custom branch policies: ${custom}, rules: ${rules:-none})."
+            exit 1
+          fi
+      - if: steps.publish.outputs.tag != ''
+        env:
+          RELEASE_TAG: ${{ steps.publish.outputs.tag }}
         run: python3 scripts/check-version.py --tag "$RELEASE_TAG"
+      - name: Hand packages to the publish jobs
+        if: steps.publish.outputs.tag != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+          if-no-files-found: error
+
+  # A separate job keeps the OIDC token away from dotnet restore and test, which run third-party package code.
+  # It runs before the GitHub Packages push, so a broken nuget.org policy stops the release before any registry changes.
+  nuget:
+    needs: release
+    if: needs.release.outputs.nuget == 'true'
+    runs-on: ubuntu-latest
+    # The nuget.org trusted publishing policy names this environment, and its deployment rule allows master only.
+    environment: nuget
+    permissions:
+      # nuget.org trusted publishing exchanges this job's OIDC token for an API key that expires after 1 hour.
+      id-token: write
+    steps:
+      # Actions here are pinned by commit SHA because this job can obtain a nuget.org push key.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: packages
+          path: artifacts
+      - name: Log in to nuget.org
+        id: nuget-login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
+      # The runner image's dotnet SDK pushes the package. The push also uploads the matching .snupkg
+      # to the nuget.org symbol server.
+      - name: Publish package to nuget.org
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
+
+  github:
+    needs: [release, nuget]
+    # Runs after nuget.org succeeds, or without it for a tag that skips nuget.org.
+    if: ${{ !cancelled() && needs.release.result == 'success' && needs.release.outputs.tag != '' && needs.nuget.result != 'failure' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: packages
+          path: artifacts
       - name: Authenticate to GitHub Packages
-        if: steps.release.outputs.release_created == 'true' || inputs.tag != ''
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: dotnet nuget add source --username "$GITHUB_ACTOR" --password "$GITHUB_TOKEN" --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"
       - name: Publish package to GitHub Packages
-        if: steps.release.outputs.release_created == 'true' || inputs.tag != ''
         run: dotnet nuget push artifacts/*.nupkg --source github --skip-duplicate --no-symbols
       - name: Attach packages to GitHub Release
-        if: steps.release.outputs.release_created == 'true' || inputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.tag || steps.release.outputs.tag_name }}
-        run: gh release upload "$RELEASE_TAG" artifacts/*.nupkg artifacts/*.snupkg --clobber
+          RELEASE_TAG: ${{ needs.release.outputs.tag }}
+        run: gh release upload "$RELEASE_TAG" artifacts/*.nupkg artifacts/*.snupkg --clobber --repo "$GITHUB_REPOSITORY"
